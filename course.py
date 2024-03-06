@@ -9,9 +9,12 @@ from bs4 import BeautifulSoup
 class Course:
     """Class to work with data from courses on codewithmosh.com."""
 
-    def __init__(self, slug: str):
+    def __init__(self, slug: str, derived: bool = False):
         self.url = f"https://codewithmosh.com/p/{slug}/"
         self.course_info = self.get_data(self.url)
+        self.is_derived = derived
+        self.is_bundle = True if self["type"] != "single" else False
+        self.courses = self.get_all()
 
     def get_data(self, url) -> Union[Dict, List[Dict]]:
         """Returns appropriate data from a url.
@@ -28,6 +31,19 @@ class Course:
         course = data["course"]
         course["curriculum"] = data["curriculum"]
         return course
+
+    def get_all(self) -> List['Course']:
+        """Returns the list of all courses in a bundle."""
+
+        if not self.is_bundle:
+            return [self]
+        url = "https://codewithmosh.com/courses"
+        data = self.get_data(url)
+        return [
+            Course(course["slug"], derived=True)
+            for course in data
+            if course["id"] in self["bundleContents"]
+        ]
 
     def __str__(self):
         return self["name"]
