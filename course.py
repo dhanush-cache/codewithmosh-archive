@@ -14,6 +14,7 @@ class Course:
         self.course_info = self.get_data(self.url)
         self.is_derived = derived
         self.is_bundle = True if self["type"] != "single" else False
+        self.dirname = self.dirfmt_name()
         self.courses = self.get_all()
 
     def get_data(self, url) -> Union[Dict, List[Dict]]:
@@ -44,6 +45,30 @@ class Course:
             for course in data
             if course["id"] in self["bundleContents"]
         ]
+
+    def dirfmt_name(self) -> str:
+        """Returns the ideal name for naming directories from the name of the course."""
+
+        name = self["name"]
+        keywords = [
+            "The Ultimate",
+            "Ultimate",
+            "The Complete",
+            "Complete",
+            "Mastering",
+            "Mastery",
+            "Series",
+            "Course",
+            "Bundle",
+        ]
+        replace = [(r"\s+", " "), (r":", "-")]
+        for text in keywords:
+            name = name.replace(text, "")
+        for old, new in replace:
+            name = re.sub(old, new, name)
+        if self.is_derived and "part" in name.lower():
+            name = name[name.lower().find("part"):]
+        return name.strip()
 
     def __str__(self):
         return self["name"]
