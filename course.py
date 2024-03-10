@@ -70,6 +70,20 @@ class Course:
             name = name[name.lower().find("part"):]
         return name.strip()
 
+    def get_filenames(self, pdf: bool = False) -> List[str]:
+        if self.is_bundle:
+            return [
+                f"{course.dirname}/{dirname}"
+                for course in self.courses
+                for dirname in course.get_filenames(pdf=pdf)
+            ]
+        return [
+            f"{s:02}- {section['name']}/{l:02}- {lesson['name']}"
+            for s, section in enumerate(self, start=1)
+            for l, lesson in enumerate(section["lessons"], start=1)
+            if lesson["type"] == pdf + 1
+        ]
+
     def __str__(self):
         return self["name"]
 
