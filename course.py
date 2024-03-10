@@ -60,3 +60,6 @@ class Course:
         for section in self:
             count += len(section["lessons"])
         return count
+
+    def __iter__(self):
+        return iter(self.courses) if self.is_bundle else iter(self["curriculum"])
