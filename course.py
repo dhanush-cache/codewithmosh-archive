@@ -28,3 +28,9 @@ class Course:
         course = data["course"]
         course["curriculum"] = data["curriculum"]
         return course
+
+    def __str__(self):
+        return self["name"]
+
+    def __getitem__(self, key):
+        return self.course_info[key]
