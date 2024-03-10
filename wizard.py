@@ -1,4 +1,6 @@
 from pathlib import Path
+from zipfile import ZipFile
+import shutil
 
 from course import Course
 
@@ -13,3 +15,22 @@ class FileWizard:
         self.target = self.root / course.dirname
         self.cache = self.target / ".cache"
         self.cache.mkdir(parents=True, exist_ok=True)
+        self.assembled = False
+
+    def assemble(self):
+        """Moves source to destination.
+        If source is a zip file, extracts it.
+        If source is a folder file, simply moves it."""
+
+        if self.source.is_dir():
+            shutil.move(self.source, self.target)
+        elif self.source.suffix == ".zip":
+            ZipFile(self.source).extractall(self.target)
+            ZipFile(self.source).close()
+        files = list(self.target.iterdir())
+        if len(files) == 1:
+            shutil.move(files[0], self.cache)
+        else:
+            for file in files:
+                shutil.move(file, self.cache)
+        self.assembled = True
