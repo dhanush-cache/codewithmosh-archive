@@ -50,3 +50,13 @@ class Course:
 
     def __getitem__(self, key):
         return self.course_info[key]
+
+    def __len__(self):
+        count = 0
+        if self.is_bundle:
+            for course in self.courses:
+                count += len(course)
+            return count
+        for section in self:
+            count += len(section["lessons"])
+        return count
