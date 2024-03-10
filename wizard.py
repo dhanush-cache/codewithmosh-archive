@@ -1,6 +1,9 @@
 from pathlib import Path
 from zipfile import ZipFile
+from typing import List
 import shutil
+
+from natsort import natsorted
 
 from course import Course
 
@@ -34,3 +37,10 @@ class FileWizard:
             for file in files:
                 shutil.move(file, self.cache)
         self.assembled = True
+
+    def get_names(self, ext: str = "mp4") -> List[Path]:
+        """Returns a sorted list of Path objects for all files by extension."""
+
+        if not self.assembled:
+            self.assemble()
+        return natsorted(self.cache.rglob(f"*.{ext}"))
