@@ -45,5 +45,15 @@ class FileWizard:
             self.assemble()
         return natsorted(self.cache.rglob(f"*.{ext}"))
 
+    def dry_move(self):
+        """Moves all the video files to thier final destination."""
+
+        files = self.get_names()
+        names = self.course.get_filenames()
+        for file, name in zip(files, names):
+            name = self.target / name
+            name.parent.mkdir(parents=True, exist_ok=True)
+            file.rename(f"{name}.mp4")
+
     def __eq__(self, other: Course):
         return True if len(self.get_names()) == len(other.get_filenames()) else False
