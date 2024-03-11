@@ -44,3 +44,6 @@ class FileWizard:
         if not self.assembled:
             self.assemble()
         return natsorted(self.cache.rglob(f"*.{ext}"))
+
+    def __eq__(self, other: Course):
+        return True if len(self.get_names()) == len(other.get_filenames()) else False
