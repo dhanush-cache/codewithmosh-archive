@@ -38,6 +38,16 @@ class FileWizard:
                 shutil.move(file, self.cache)
         self.assembled = True
 
+    def cleanup(self, *suffixes):
+        """Removes all unwanted files and folders"""
+
+        suffixes += ".mp4", ".mkv", ".zip", ".pdf"
+        for path in sorted(self.cache.rglob("*"), reverse=True):
+            if path.is_file() and path.suffix not in suffixes:
+                path.unlink()
+            elif path.is_dir() and not any(path.iterdir()):
+                path.rmdir()
+
     def get_names(self, ext: str = "mp4") -> List[Path]:
         """Returns a sorted list of Path objects for all files by extension."""
 
