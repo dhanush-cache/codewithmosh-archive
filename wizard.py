@@ -78,7 +78,7 @@ class FileWizard:
         inputs = ["-i", raw]
         selection = ["-map", "0:v", "-map", "0:a"]
         codec = ["-c", "copy"]
-        metadata = [
+        _metadata = [
             "-map_metadata",
             "-1",
             "-map_metadata:s",
@@ -92,11 +92,17 @@ class FileWizard:
             "-map_chapters:g",
             "-1",
         ]
+        metadata = [
+            "-metadata",
+            f"title={out.stem[4:]}",
+            "-metadata:s:a:0",
+            "language=en",
+        ]
         thumbnail = [
             "-attach",
             raw.with_suffix(".jpeg"),
             "-metadata:s:t",
-            f"filename={out.stem}",
+            f"filename={out.stem[4:]}",
             "-metadata:s:t",
             "mimetype=image/jpeg",
         ]
@@ -111,10 +117,14 @@ class FileWizard:
         srt_file = raw.sub_file()
         if embeded:
             selection += ["-map", "0:s"]
+            metadata += ["-metadata:s:s:0", "language=en"]
         elif srt_file:
             inputs += ["-i", srt_file]
             selection += ["-map", "1:s"]
-        command += inputs + selection + codec + metadata + thumbnail + output
+            metadata += ["-metadata:s:s:0", "language=en"]
+        command += (
+            inputs + selection + codec + _metadata + metadata + thumbnail + output
+        )
         subprocess.run(command, text=True)
 
     def ffmove(self, intro, other):
