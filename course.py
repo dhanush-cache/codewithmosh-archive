@@ -102,3 +102,38 @@ class Course:
 
     def __iter__(self):
         return iter(self.courses) if self.is_bundle else iter(self["curriculum"])
+
+
+class Lesson:
+    """Class that represents a single lesson from courses on codewithmosh.com."""
+
+    def __init__(self, linfo: dict):
+        self.raw = linfo
+        self.name = self['name']
+        self.is_video = True if self['type'] == 1 else False
+        self.is_pdf = not self.is_video and self.check_pdf()
+        self.is_crap = True if not (self.is_video or self.is_pdf) else False
+        self.duration = self.get_time()
+
+    def check_pdf(self) -> bool:
+        whitelist = []
+        for text in whitelist:
+            if text in self.name:
+                return True
+        return False
+
+    def get_time(self) -> int:
+        if not self.raw["duration"]:
+            return 0
+        time = self.raw["duration"]
+        minutes, seconds = map(int, re.findall(r'\d+', time))
+        return minutes * 60 + seconds
+
+    def __str__(self):
+        return self.name
+
+    def __getitem__(self, key):
+        return self.raw[key]
+
+    def __len__(self):
+        self.duration
