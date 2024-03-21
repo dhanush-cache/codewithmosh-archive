@@ -15,8 +15,8 @@ class Course:
         self.is_derived = derived
         self.is_bundle = True if self["type"] != "single" else False
         self.dirname = self.dirfmt_name()
-        self.sections = [Section(section, self)
-                         for section in self["curriculum"]]
+        self.sections = [Section(section, self, index)
+                         for index, section in enumerate(self["curriculum"], start=1)]
         self.courses = self.get_all()
 
     def get_data(self, url) -> Union[Dict, List[Dict]]:
@@ -109,11 +109,13 @@ class Course:
 class Section:
     """Class that represents a single section from courses on codewithmosh.com."""
 
-    def __init__(self, sinfo: dict, parent: Course):
+    def __init__(self, sinfo: dict, parent: Course, index: int):
         self.raw = sinfo
         self.parent = parent
         self.name = self["name"]
-        self.lessons = [Lesson(lesson, self) for lesson in self["lessons"]]
+        self.dirname = f"{self.parent.dirname}/{index:02}- {self}" if self.parent.is_derived else f"{index:02}- {self}"
+        self.lessons = [Lesson(lesson, self, index)
+                        for index, lesson in enumerate(self["lessons"], start=1)]
         self.duration = self.get_time()
 
     def get_time(self) -> int:
@@ -138,7 +140,7 @@ class Section:
 class Lesson:
     """Class that represents a single lesson from courses on codewithmosh.com."""
 
-    def __init__(self, linfo: dict, parent: Section):
+    def __init__(self, linfo: dict, parent: Section, index: int):
         self.raw = linfo
         self.parent = parent
         self.name = self["name"]
@@ -146,7 +148,7 @@ class Lesson:
         self.is_pdf = not self.is_video and self.check_pdf()
         self.is_crap = True if not (self.is_video or self.is_pdf) else False
         self.duration = self.get_time()
-        self.dirname = f"{self.parent.parent.dirname}/{self.parent}/{self}"
+        self.dirname = f"{self.parent.dirname}/{index:02}- {self}"
 
     def check_pdf(self) -> bool:
         whitelist = []
