@@ -61,9 +61,9 @@ class FileWizard:
         """Moves all the video files to thier final destination."""
 
         files = self.get_names()
-        names = self.course.get_filenames()
+        names = self.course.get_lessons()
         for file, name in zip(files, names):
-            name = self.target / name
+            name = self.target / name.dirname
             name.parent.mkdir(parents=True, exist_ok=True)
             file.rename(f"{name}.mp4")
 
@@ -129,11 +129,11 @@ class FileWizard:
 
     def ffmove(self, intro, other):
         files = self.get_names()
-        names = self.course.get_filenames()
+        names = self.course.get_lessons()
         self.intro = intro
         self.other = other
         for file, name in zip(files, names):
-            self.ffprocess(file, name)
+            self.ffprocess(file, name.dirname)
 
     def __eq__(self, other: Course):
-        return True if len(self.get_names()) == len(other.get_filenames()) else False
+        return True if len(self.get_names()) == len(other.get_lessons()) else False
