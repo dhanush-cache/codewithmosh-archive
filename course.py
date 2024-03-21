@@ -72,18 +72,13 @@ class Course:
             name = name[name.lower().find("part"):]
         return name.strip()
 
-    def get_filenames(self, pdf: bool = False) -> List[str]:
-        if self.is_bundle:
-            return [
-                f"{course.dirname}/{dirname}"
-                for course in self.courses
-                for dirname in course.get_filenames(pdf=pdf)
-            ]
+    def get_lessons(self, pdf: bool = False) -> List["Lesson"]:
         return [
-            f"{s:02}- {section['name']}/{l:02}- {lesson['name']}"
-            for s, section in enumerate(self, start=1)
-            for l, lesson in enumerate(section["lessons"], start=1)
-            if lesson["type"] == pdf + 1
+            lesson
+            for course in self.courses
+            for section in course
+            for lesson in section
+            if (lesson.is_pdf if pdf else lesson.is_video)
         ]
 
     def __str__(self):
@@ -103,7 +98,7 @@ class Course:
         return count
 
     def __iter__(self):
-        return iter(self.courses) if self.is_bundle else iter(self.sections)
+        return iter(self.sections)
 
 
 class Section:
@@ -151,9 +146,9 @@ class Lesson:
         self.dirname = f"{self.parent.dirname}/{index:02}- {self}"
 
     def check_pdf(self) -> bool:
-        whitelist = []
+        whitelist = ["summary", "exercise"]
         for text in whitelist:
-            if text in self.name:
+            if text in self.name.lower():
                 return True
         return False
 
