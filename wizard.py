@@ -6,7 +6,7 @@ import subprocess
 
 from natsort import natsorted
 
-from course import Course
+from course import Course, Lesson
 from video import Video
 
 
@@ -67,9 +67,9 @@ class FileWizard:
             name.parent.mkdir(parents=True, exist_ok=True)
             file.rename(f"{name}.mp4")
 
-    def ffprocess(self, raw: Path, name: str):
+    def ffprocess(self, raw: Path, lesson: Lesson):
         raw = Video(raw)
-        out = Video(self.target / f"{name}.mkv")
+        out = Video(self.target / f"{lesson.dirname}.mkv")
 
         frame = self.intro if out.name.startswith("01") else self.other
         frame = str(frame)
@@ -94,7 +94,7 @@ class FileWizard:
         ]
         metadata = [
             "-metadata",
-            f"title={out.stem[4:]}",
+            f"title={lesson}",
             "-metadata:s:a:0",
             "language=en",
         ]
@@ -102,7 +102,7 @@ class FileWizard:
             "-attach",
             raw.with_suffix(".jpeg"),
             "-metadata:s:t",
-            f"filename={out.stem[4:]}",
+            f"filename={lesson}",
             "-metadata:s:t",
             "mimetype=image/jpeg",
         ]
@@ -133,7 +133,7 @@ class FileWizard:
         self.intro = intro
         self.other = other
         for file, name in zip(files, names):
-            self.ffprocess(file, name.dirname)
+            self.ffprocess(file, name)
 
     def __eq__(self, other: Course):
         return True if len(self.get_names()) == len(other.get_lessons()) else False
