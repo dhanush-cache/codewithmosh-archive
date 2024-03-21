@@ -1,10 +1,12 @@
 from pathlib import Path
+from sys import executable
 from zipfile import ZipFile
 from typing import List
 import shutil
 import subprocess
 
 from natsort import natsorted
+import requests
 
 from course import Course, Lesson
 from video import Video
@@ -22,9 +24,7 @@ class FileWizard:
         self.assembled = False
 
     def assemble(self):
-        """Moves source to destination.
-        If source is a zip file, extracts it.
-        If source is a folder file, simply moves it."""
+        """Assemble files at destination."""
 
         if self.source.is_dir():
             shutil.move(self.source, self.target)
@@ -33,9 +33,9 @@ class FileWizard:
             ZipFile(self.source).close()
         files = list(self.target.iterdir())
         if len(files) == 1:
-            self.cache.mkdir(parents=True, exist_ok=True)
             shutil.move(files[0], self.cache)
         else:
+            self.cache.mkdir(parents=True, exist_ok=True)
             for file in files:
                 shutil.move(file, self.cache)
         self.assembled = True
@@ -43,12 +43,20 @@ class FileWizard:
     def cleanup(self, *suffixes):
         """Removes all unwanted files and folders"""
 
-        suffixes += ".mp4", ".mkv", ".zip", ".pdf"
-        for path in sorted(self.cache.rglob("*"), reverse=True):
-            if path.is_file() and path.suffix not in suffixes:
+        exceptions = [".mp4", ".mkv", ".zip", ".pdf", ".jpeg", ".jpg"]
+        whitelist = [ext for ext in exceptions if ext not in suffixes]
+        for path in sorted(self.target.rglob("*"), reverse=True):
+            if path.is_file() and path.suffix not in whitelist:
                 path.unlink()
             elif path.is_dir() and not any(path.iterdir()):
                 path.rmdir()
+
+    def dl_thumb(self):
+        for course in self.course.courses:
+            url = course["imageUrl"]
+            name = course["id"]
+            response = requests.get(url)
+            (self.cache / f"{name}.jpeg").write_bytes(response.content)
 
     def get_names(self, ext: str = "mp4") -> List[Path]:
         """Returns a sorted list of Path objects for all files by extension."""
@@ -68,11 +76,9 @@ class FileWizard:
             file.rename(f"{name}.mp4")
 
     def ffprocess(self, raw: Path, lesson: Lesson):
+        print(lesson.dirname)
         raw = Video(raw)
         out = Video(self.target / f"{lesson.dirname}.mkv")
-
-        frame = self.intro if out.name.startswith("01") else self.other
-        frame = str(frame)
 
         command = ["ffmpeg", "-y"]
         inputs = ["-i", raw]
@@ -98,9 +104,13 @@ class FileWizard:
             "-metadata:s:a:0",
             "language=en",
         ]
+        name = lesson.parent.parent["id"]
+        th_file = (self.cache / f"{name}.jpeg")
+
+        thumb_file = f"{name}.jpeg"
         thumbnail = [
             "-attach",
-            raw.with_suffix(".jpeg"),
+            th_file if self.thumb else raw.with_suffix(".jpeg"),
             "-metadata:s:t",
             f"filename={lesson}",
             "-metadata:s:t",
@@ -108,9 +118,12 @@ class FileWizard:
         ]
         output = [out]
 
-        extract = ["-ss", frame, "-vframes", "1", raw.with_suffix(".jpeg")]
-        extract = command + inputs + extract
-        subprocess.run(extract)
+        if not self.thumb:
+            frame = str(self.intro if out.name.startswith(
+                "01") else self.other)
+            extract = ["-ss", frame, "-vframes", "1", raw.with_suffix(".jpeg")]
+            extract = command + inputs + extract
+            subprocess.run(extract, capture_output=True, text=True)
 
         out.parent.mkdir(parents=True, exist_ok=True)
         embeded = raw.has_subs()
@@ -125,13 +138,18 @@ class FileWizard:
         command += (
             inputs + selection + codec + _metadata + metadata + thumbnail + output
         )
-        subprocess.run(command, text=True)
+        subprocess.run(command, capture_output=True, text=True)
 
-    def ffmove(self, intro, other):
+    def ffmove(self, intro, other, thumb=False):
         files = self.get_names()
         names = self.course.get_lessons()
         self.intro = intro
         self.other = other
+        self.thumb = thumb
+        if self.thumb:
+            self.dl_thumb()
+        if len(files) != len(names):
+            raise ValueError("Not enough lessons!!!")
         for file, name in zip(files, names):
             self.ffprocess(file, name)
 
