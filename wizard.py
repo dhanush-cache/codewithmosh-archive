@@ -19,7 +19,6 @@ class FileWizard:
         self.root = Path("/sdcard/Programming Videos")
         self.target = self.root / course.dirname
         self.cache = self.target / ".cache"
-        self.cache.mkdir(parents=True, exist_ok=True)
         self.assembled = False
 
     def assemble(self):
@@ -34,6 +33,7 @@ class FileWizard:
             ZipFile(self.source).close()
         files = list(self.target.iterdir())
         if len(files) == 1:
+            self.cache.mkdir(parents=True, exist_ok=True)
             shutil.move(files[0], self.cache)
         else:
             for file in files:
