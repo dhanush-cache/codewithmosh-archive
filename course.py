@@ -12,6 +12,7 @@ class Course:
     def __init__(self, slug: str, derived: bool = False):
         self.url = f"https://codewithmosh.com/p/{slug}/"
         self.course_info = self.get_data(self.url)
+        self.sections = [Section(section) for section in self["curriculum"]]
         self.is_derived = derived
         self.is_bundle = True if self["type"] != "single" else False
         self.dirname = self.dirfmt_name()
@@ -101,7 +102,7 @@ class Course:
         return count
 
     def __iter__(self):
-        return iter(self.courses) if self.is_bundle else iter(self["curriculum"])
+        return iter(self.courses) if self.is_bundle else iter(self.sections)
 
 
 class Lesson:
