@@ -137,3 +137,31 @@ class Lesson:
 
     def __len__(self):
         self.duration
+
+
+class Section:
+    """Class that represents a single section from courses on codewithmosh.com."""
+
+    def __init__(self, sinfo: dict):
+        self.raw = sinfo
+        self.name = self['name']
+        self.lessons = [Lesson(lesson) for lesson in self["lessons"]]
+        self.duration = self.get_time()
+
+    def get_time(self) -> int:
+        time = 0
+        for lesson in self.lessons:
+            time += lesson.duration
+        return time
+
+    def __str__(self):
+        return self.name
+
+    def __getitem__(self, key):
+        return self.raw[key]
+
+    def __len__(self):
+        self.duration
+
+    def __iter__(self):
+        return iter(self.lessons)
