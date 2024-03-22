@@ -140,12 +140,16 @@ class Lesson:
         self.parent = parent
         self.name = self["name"]
         self.is_video = True if self["type"] == 1 else False
-        self.is_pdf = not self.is_video and self.check_pdf()
+        self.is_pdf = self.check_pdf()
         self.is_crap = True if not (self.is_video or self.is_pdf) else False
         self.duration = self.get_time()
         self.dirname = f"{self.parent.dirname}/{index:02}- {self}"
 
     def check_pdf(self) -> bool:
+        if "cheat sheet" in self.name.lower():
+            return True
+        if self.is_video:
+            return False
         whitelist = ["summary", "exercise"]
         for text in whitelist:
             if text in self.name.lower():
