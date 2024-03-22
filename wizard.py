@@ -1,5 +1,4 @@
 from pathlib import Path
-from sys import executable
 from zipfile import ZipFile
 from typing import List
 import shutil
