@@ -106,7 +106,6 @@ class FileWizard:
         name = lesson.parent.parent["id"]
         th_file = (self.cache / f"{name}.jpeg")
 
-        thumb_file = f"{name}.jpeg"
         thumbnail = [
             "-attach",
             th_file if self.thumb else raw.with_suffix(".jpeg"),
@@ -154,30 +153,30 @@ class FileWizard:
         for file, name in zip(files, names):
             self.ffprocess(file, name)
 
+    def extract_zips(self):
+        archives = self.target / "Files" / "Archives"
+        archives.mkdir(parents=True, exist_ok=True)
+        files = self.get_names(ext="zip")
+        for index, file in enumerate(files, start=1):
+            print(f"extracting {file}")
+            target_name = f"code.zip" if len(
+                files) <= 1 else f"code-{index:02}.zip"
+            target_path = archives / target_name
+
+            with ZipFile(file) as source, ZipFile(target_path, 'w') as target:
+                for file_info in source.infolist():
+                    if file_info.filename.endswith(".pdf"):
+                        source.extract(file_info, path=file.parent)
+                    else:
+                        file_content = source.read(file_info.filename)
+                        target.writestr(file_info.filename, file_content)
+
     def pdfmove(self):
         files = self.get_names(ext="pdf")
         names = self.course.get_lessons(pdf=True)
         for file, name in zip(files, names):
             name = self.target / name.dirname
             name.parent.mkdir(parents=True, exist_ok=True)
-            file.rename(f"{name}.pdf")
-
-    def extract_zips(self):
-        files = self.get_names(ext="zip")
-        for file in files:
-            ZipFile(file).extractall(file.parent)
-            ZipFile(file).close()
-            file.unlink()
-
-    def move_zips(self):
-        files = self.get_names(ext="zip")
-        archives = self.target / "Archives"
-        if files:
-            archives.mkdir(parents=True, exist_ok=True)
-        for file in files:
-            name = archives / file.name
-            ZipFile(file).extractall()
-            ZipFile(file).close()
             file.rename(f"{name}.pdf")
 
     def __eq__(self, other: Course):
