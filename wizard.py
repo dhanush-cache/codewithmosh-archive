@@ -130,6 +130,7 @@ class FileWizard:
         if embeded:
             selection += ["-map", "0:s"]
             metadata += ["-metadata:s:s:0", "language=en"]
+            codec += ["-c:s", "srt"]
         elif srt_file:
             inputs += ["-i", srt_file]
             selection += ["-map", "1:s"]
