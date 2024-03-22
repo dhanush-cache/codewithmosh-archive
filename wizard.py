@@ -148,6 +148,7 @@ class FileWizard:
         if self.thumb:
             self.dl_thumb()
         if len(files) != len(names):
+            print(len(files), len(names))
             raise ValueError("Not enough lessons!!!")
         for file, name in zip(files, names):
             self.ffprocess(file, name)
@@ -158,7 +159,24 @@ class FileWizard:
         for file, name in zip(files, names):
             name = self.target / name.dirname
             name.parent.mkdir(parents=True, exist_ok=True)
-            print(name)
+            file.rename(f"{name}.pdf")
+
+    def extract_zips(self):
+        files = self.get_names(ext="zip")
+        for file in files:
+            ZipFile(file).extractall(file.parent)
+            ZipFile(file).close()
+            file.unlink()
+
+    def move_zips(self):
+        files = self.get_names(ext="zip")
+        archives = self.target / "Archives"
+        if files:
+            archives.mkdir(parents=True, exist_ok=True)
+        for file in files:
+            name = archives / file.name
+            ZipFile(file).extractall()
+            ZipFile(file).close()
             file.rename(f"{name}.pdf")
 
     def __eq__(self, other: Course):
