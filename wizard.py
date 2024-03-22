@@ -153,5 +153,14 @@ class FileWizard:
         for file, name in zip(files, names):
             self.ffprocess(file, name)
 
+    def pdfmove(self):
+        files = self.get_names(ext="pdf")
+        names = self.course.get_lessons(pdf=True)
+        for file, name in zip(files, names):
+            name = self.target / name.dirname
+            name.parent.mkdir(parents=True, exist_ok=True)
+            print(name)
+            file.rename(f"{name}.pdf")
+
     def __eq__(self, other: Course):
         return True if len(self.get_names()) == len(other.get_lessons()) else False
