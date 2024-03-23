@@ -171,13 +171,19 @@ class FileWizard:
                         file_content = source.read(file_info.filename)
                         target.writestr(file_info.filename, file_content)
 
-    def pdfmove(self):
+    def pdfmove(self, organize=True):
         files = self.get_names(ext="pdf")
         names = self.course.get_lessons(pdf=True)
-        for file, name in zip(files, names):
-            name = self.target / name.dirname
-            name.parent.mkdir(parents=True, exist_ok=True)
-            file.rename(f"{name}.pdf")
+        documents = self.target / "Files" / "Documents"
+        documents.mkdir(parents=True, exist_ok=True)
+        for file, name in zip(enumerate(files), names):
+            index, file = file
+            if organize:
+                name = self.target / name.dirname
+                name.parent.mkdir(parents=True, exist_ok=True)
+                file.rename(f"{name}.pdf")
+            else:
+                file.rename(documents / f"{index:02}- {file.name}")
 
     def __eq__(self, other: Course):
         return True if len(self.get_names()) == len(other.get_lessons()) else False
