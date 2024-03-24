@@ -195,7 +195,7 @@ class FileWizard:
         files = self.get_names(ext="pdf")
         names = self.course.get_lessons(pdf=True)
         documents = self.target / "Files" / "Documents"
-        if files:
+        if files and not organize:
             documents.mkdir(parents=True, exist_ok=True)
         for file, name in zip(enumerate(files), names):
             index, file = file
