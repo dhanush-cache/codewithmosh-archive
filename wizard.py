@@ -44,11 +44,13 @@ class FileWizard:
 
         exceptions = [".mp4", ".mkv", ".zip", ".pdf", ".jpeg", ".jpg"]
         whitelist = [ext for ext in exceptions if ext not in suffixes]
-        for path in sorted(self.target.rglob("*"), reverse=True):
+        for path in sorted(self.cache.rglob("*"), reverse=True):
             if path.is_file() and path.suffix not in whitelist:
                 path.unlink()
             elif path.is_dir() and not any(path.iterdir()):
                 path.rmdir()
+        if self.cache.is_dir() and not any(self.cache.iterdir()):
+            self.cache.rmdir()
 
     def dl_thumb(self):
         for course in self.course.courses:
@@ -155,8 +157,9 @@ class FileWizard:
 
     def extract_zips(self):
         archives = self.target / "Files" / "Archives"
-        archives.mkdir(parents=True, exist_ok=True)
         files = self.get_names(ext="zip")
+        if files:
+            archives.mkdir(parents=True, exist_ok=True)
         for index, file in enumerate(files, start=1):
             print(f"extracting {file}")
             target_name = f"code.zip" if len(
@@ -175,7 +178,8 @@ class FileWizard:
         files = self.get_names(ext="pdf")
         names = self.course.get_lessons(pdf=True)
         documents = self.target / "Files" / "Documents"
-        documents.mkdir(parents=True, exist_ok=True)
+        if files:
+            documents.mkdir(parents=True, exist_ok=True)
         for file, name in zip(enumerate(files), names):
             index, file = file
             if organize:
