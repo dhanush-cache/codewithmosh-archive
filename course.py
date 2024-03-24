@@ -73,6 +73,8 @@ class Course:
         return name.strip()
 
     def get_lessons(self, pdf: bool = False) -> List["Lesson"]:
+        """Returns a list of all the lessons of a particular type."""
+
         return [
             lesson
             for course in self.courses
@@ -114,6 +116,8 @@ class Section:
         self.duration = self.get_time()
 
     def get_time(self) -> int:
+        """Returns the total duration of a section in seconds."""
+
         time = 0
         for lesson in self.lessons:
             time += lesson.duration
@@ -146,6 +150,8 @@ class Lesson:
         self.dirname = f"{self.parent.dirname}/{index:02}- {self}"
 
     def check_pdf(self) -> bool:
+        """Returns true if a lesson is (likely to be) a pdf."""
+
         if "cheat sheet" in self.name.lower():
             return True
         if self.is_video:
@@ -157,6 +163,8 @@ class Lesson:
         return False
 
     def get_time(self) -> int:
+        """Returns the duration of the lesson in seconds."""
+
         if not self.raw["duration"]:
             return 0
         time = self.raw["duration"]
