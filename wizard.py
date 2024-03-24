@@ -169,6 +169,8 @@ class FileWizard:
             self.ffprocess(file, lesson)
 
     def extract_zips(self):
+        """Moves zips to final destination after extracting zips from them"""
+
         archives = self.target / "Files" / "Archives"
         files = self.get_names(ext="zip")
         if files:
@@ -188,6 +190,8 @@ class FileWizard:
                         target.writestr(file_info.filename, file_content)
 
     def pdfmove(self, organize=True):
+        """Move pdfs to final destination"""
+
         files = self.get_names(ext="pdf")
         names = self.course.get_lessons(pdf=True)
         documents = self.target / "Files" / "Documents"
