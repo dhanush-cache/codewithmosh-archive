@@ -106,7 +106,7 @@ class FileWizard:
             "language=en",
         ]
         name = lesson.parent.parent["id"]
-        th_file = (self.cache / f"{name}.jpeg")
+        th_file = self.cache / f"{name}.jpeg"
 
         thumbnail = [
             "-attach",
@@ -166,7 +166,7 @@ class FileWizard:
                 files) <= 1 else f"code-{index:02}.zip"
             target_path = archives / target_name
 
-            with ZipFile(file) as source, ZipFile(target_path, 'w') as target:
+            with ZipFile(file) as source, ZipFile(target_path, "w") as target:
                 for file_info in source.infolist():
                     if file_info.filename.endswith(".pdf"):
                         source.extract(file_info, path=file.parent)
