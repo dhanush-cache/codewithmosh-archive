@@ -14,8 +14,8 @@ from video import Video
 class FileWizard:
     """Class to organize files locally"""
 
-    def __init__(self, source: Path, course: Course):
-        self.source = source
+    def __init__(self, source: str, course: Course):
+        self.source = Path(source)
         self.course = course
         self.root = Path("/sdcard/Programming Videos")
         self.target = self.root / course.dirname
@@ -83,12 +83,13 @@ class FileWizard:
             file.rename(f"{name}.mp4")
 
     def ffprocess(self, raw: Path, lesson: Lesson):
-        print(lesson.dirname)
-        raw = Video(raw)
+        """Processes a given raw file as per the lesson attributes."""
+
+        inp = Video(raw)
         out = Video(self.target / f"{lesson.dirname}.mkv")
 
         command = ["ffmpeg", "-y"]
-        inputs = ["-i", raw]
+        inputs = ["-i", inp]
         selection = ["-map", "0:v", "-map", "0:a"]
         codec = ["-c", "copy"]
         _metadata = [
@@ -108,15 +109,17 @@ class FileWizard:
         metadata = [
             "-metadata",
             f"title={lesson}",
+            "-metadata",
+            f"comment={lesson.parent.name}",
             "-metadata:s:a:0",
             "language=en",
         ]
-        name = lesson.parent.parent["id"]
-        th_file = self.cache / f"{name}.jpeg"
+        th_name = lesson.parent.parent["id"]
+        th_file = self.cache / f"{th_name}.jpeg"
 
         thumbnail = [
             "-attach",
-            th_file if self.thumb else raw.with_suffix(".jpeg"),
+            th_file if self.thumb else inp.with_suffix(".jpeg"),
             "-metadata:s:t",
             f"filename={lesson}",
             "-metadata:s:t",
@@ -127,13 +130,13 @@ class FileWizard:
         if not self.thumb:
             frame = str(self.intro if out.name.startswith(
                 "01") else self.other)
-            extract = ["-ss", frame, "-vframes", "1", raw.with_suffix(".jpeg")]
+            extract = ["-ss", frame, "-vframes", "1", inp.with_suffix(".jpeg")]
             extract = command + inputs + extract
-            subprocess.run(extract, capture_output=True, text=True)
+            subprocess.run(extract, capture_output=True)
 
         out.parent.mkdir(parents=True, exist_ok=True)
-        embeded = raw.has_subs()
-        srt_file = raw.sub_file()
+        embeded = inp.has_subs()
+        srt_file = inp.sub_file()
         if embeded:
             selection += ["-map", "0:s"]
             metadata += ["-metadata:s:s:0", "language=en"]
@@ -145,9 +148,11 @@ class FileWizard:
         command += (
             inputs + selection + codec + _metadata + metadata + thumbnail + output
         )
-        subprocess.run(command, capture_output=True, text=True)
+        subprocess.run(command, capture_output=True)
 
-    def ffmove(self, intro, other, thumb=False):
+    def ffmove(self, intro=0, other=0, thumb=False):
+        """Processes all files and places them in their final destination."""
+
         files = self.get_names()
         names = self.course.get_lessons()
         self.intro = intro
@@ -156,10 +161,12 @@ class FileWizard:
         if self.thumb:
             self.dl_thumb()
         if len(files) != len(names):
-            print(len(files), len(names))
-            raise ValueError("Not enough lessons!!!")
-        for file, name in zip(files, names):
-            self.ffprocess(file, name)
+            print(f"Local:  {len(files)}")
+            print(f"Remote: {len(names)}")
+            raise ValueError("Not enough local files!!!")
+        for file, lesson in zip(files, names):
+            print(lesson.dirname)
+            self.ffprocess(file, lesson)
 
     def extract_zips(self):
         archives = self.target / "Files" / "Archives"
