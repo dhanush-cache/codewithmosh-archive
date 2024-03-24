@@ -52,12 +52,18 @@ class FileWizard:
         if self.cache.is_dir() and not any(self.cache.iterdir()):
             self.cache.rmdir()
 
-    def dl_thumb(self):
+    def dl_thumb(self) -> List[Path]:
+        """Downloads all thumbnails from the course and it's children."""
+
+        self.cache.mkdir(parents=True, exist_ok=True)
+        thumbnails = []
         for course in self.course.courses:
             url = course["imageUrl"]
             name = course["id"]
             response = requests.get(url)
             (self.cache / f"{name}.jpeg").write_bytes(response.content)
+            thumbnails.append(self.cache / f"{name}.jpeg")
+        return thumbnails
 
     def get_names(self, ext: str = "mp4") -> List[Path]:
         """Returns a sorted list of Path objects for all files by extension."""
